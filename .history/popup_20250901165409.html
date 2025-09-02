@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JIRA Story Point Calculator</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Story Point Calculator</h1>
+            <p>Calculate story points based on time tracking and complexity</p>
+        </div>
+        
+        <div class="form-section">
+            <div class="input-group">
+                <label for="timeSpent">Time Spent (hours):</label>
+                <input type="number" id="timeSpent" placeholder="0.0" step="0.5" min="0">
+            </div>
+            
+            <div class="input-group">
+                <label for="complexity">Complexity Level:</label>
+                <select id="complexity">
+                    <option value="1">Very Simple (1)</option>
+                    <option value="2">Simple (2)</option>
+                    <option value="3">Medium (3)</option>
+                    <option value="5">Complex (5)</option>
+                    <option value="8">Very Complex (8)</option>
+                    <option value="13">Extremely Complex (13)</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="teamVelocity">Team Velocity (story points/day):</label>
+                <input type="number" id="teamVelocity" placeholder="8" step="0.5" min="0">
+            </div>
+            
+            <div class="input-group">
+                <label for="workingHours">Working Hours per Day:</label>
+                <input type="number" id="workingHours" placeholder="8" step="0.5" min="0">
+            </div>
+        </div>
+        
+        <div class="button-section">
+            <button id="calculateBtn" class="calculate-btn">Calculate Story Points</button>
+            <button id="autoDetectBtn" class="auto-detect-btn">Auto-Detect from JIRA</button>
+        </div>
+        
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2>Results</h2>
+            <div class="result-item">
+                <span class="label">Estimated Story Points:</span>
+                <span class="value" id="storyPoints">-</span>
+            </div>
+            <div class="result-item">
+                <span class="label">Time-based Estimate:</span>
+                <span class="value" id="timeBasedEstimate">-</span>
+            </div>
+            <div class="result-item">
+                <span class="value" id="finalEstimate">-</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <button id="copyBtn" class="copy-btn" style="display: none;">Copy to Clipboard</button>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

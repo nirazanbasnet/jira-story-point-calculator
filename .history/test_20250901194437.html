@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JIRA Story Point Calculator Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .field-group {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .field-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: 200px;
+        }
+
+        .story-point-field {
+            background-color: #f0f8ff;
+            border-color: #007bff;
+        }
+
+        .debug-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>JIRA Story Point Calculator Test</h1>
+
+    <div class="field-group">
+        <div class="field-label">Time Tracking</div>
+        <input type="text" id="time-tracking" name="time-tracking" placeholder="e.g., 2h 30m" value="2h 30m">
+        <button onclick="changeTimeTracking()">Change Time</button>
+    </div>
+
+    <div class="field-group">
+        <div class="field-label">Complexity</div>
+        <select id="complexity" name="complexity">
+            <option value="0.1">0.1 - Very Simple</option>
+            <option value="0.2">0.2 - Simple</option>
+            <option value="0.3">0.3 - Basic</option>
+            <option value="0.6">0.6 - Standard</option>
+            <option value="1" selected>1.0 - Normal</option>
+            <option value="1.5">1.5 - Complex</option>
+            <option value="2">2.0 - Very Complex</option>
+        </select>
+        <button onclick="changeComplexity()">Change Complexity</button>
+    </div>
+
+    <div class="field-group story-point-field">
+        <div class="field-label">Story Points</div>
+        <div data-testid="issue-field-number.ui.issue-field-story-point-estimate--container">
+            <div data-testid="issue-field-inline-edit-read-view-container.ui.container" role="presentation">
+                <button aria-label="Edit Story Points" type="button">Edit</button>
+                <span data-testid="issue-field-story-point-estimate-readview-full.ui.story-point-estimate">
+                    <span>Add story points</span>
+                </span>
+            </div>
+        </div>
+        <button onclick="addInputField()">Add Input Field</button>
+    </div>
+
+    <div class="debug-info">
+        <h3>Debug Information</h3>
+        <p>Current Time Tracking: <span id="current-time">2h 30m</span></p>
+        <p>Current Complexity: <span id="current-complexity">1.0</span></p>
+        <p>Calculated Story Points: <span id="calculated-points">-</span></p>
+        <button onclick="calculateStoryPoints()">Calculate Story Points</button>
+        <button onclick="clearStoryPoints()">Clear Story Points</button>
+
+        <h4>Extension Control</h4>
+        <button onclick="testExtensionFunctions()">Test Extension Functions</button>
+        <button onclick="activateExtension()">🚀 Activate Extension</button>
+        <button onclick="deactivateExtension()">❌ Deactivate Extension</button>
+        <button onclick="triggerCalculation()">Trigger Calculation</button>
+
+        <h4>Floating Panel Control</h4>
+        <button onclick="showPanel()">Show Panel</button>
+        <button onclick="hidePanel()">Hide Panel</button>
+        <button onclick="togglePanel()">Toggle Panel</button>
+        <button onclick="debugPanel()">🔍 Debug Panel</button>
+        <button onclick="forceShowPanel()">🚀 Force Show Panel</button>
+
+        <h4>Status</h4>
+        <p id="extension-status">Extension Status: Unknown</p>
+
+        <h4>Quick Test</h4>
+        <button onclick="quickTest()">🧪 Quick Extension Test</button>
+        <div id="quick-test-results"
+            style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+            <h5>Test Results:</h5>
+            <div id="test-results-content"></div>
+        </div>
+
+        <h4>Keyboard Shortcuts</h4>
+        <p><strong>Ctrl+Shift+P:</strong> Toggle floating panel</p>
+        <p><strong>Ctrl+Shift+A:</strong> Activate extension</p>
+        <p><strong>Ctrl+Shift+D:</strong> Deactivate extension</p>
+
+        <h4>Manual Calculator Creation</h4>
+        <button onclick="createCalculatorManually()">🔧 Create Calculator Manually</button>
+        <p style="font-size: 12px; color: #666;">This will attempt to create the calculator manually if it's not loaded</p>
+
+        <h4>Content Script Test</h4>
+        <button onclick="testContentScript()">📜 Test Content Script</button>
+        <p style="font-size: 12px; color: #666;">This will check if the content script is loaded and working</p>
+    </div>
+
+    <script>
+        function changeTimeTracking() {
+            const timeInput = document.getElementById('time-tracking');
+            const times = ['1h', '45m', '2h 15m', '3h 30m', '1.5h'];
+            const randomTime = times[Math.floor(Math.random() * times.length)];
+            timeInput.value = randomTime;
+            timeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            timeInput.dispatchEvent(new Event('change', { bubbles: true }));
+            document.getElementById('current-time').textContent = randomTime;
+        }
+
+        function changeComplexity() {
+            const complexitySelect = document.getElementById('complexity');
+            const complexities = [0.1, 0.2, 0.3, 0.6, 1, 1.5, 2];
+            const randomComplexity = complexities[Math.floor(Math.random() * complexities.length)];
+            complexitySelect.value = randomComplexity;
+            complexitySelect.dispatchEvent(new Event('change', { bubbles: true }));
+            document.getElementById('current-complexity').textContent = randomComplexity;
+        }
+
+        function addInputField() {
+            const container = document.querySelector('[data-testid="issue-field-number.ui.issue-field-story-point-estimate--container"]');
+            const existingInput = container.querySelector('input');
+
+            if (!existingInput) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.step = '0.1';
+                input.placeholder = 'Story points';
+                input.style.width = '100px';
+                input.style.marginLeft = '10px';
+                container.appendChild(input);
+            }
+        }
+
+        function calculateStoryPoints() {
+            const timeTracking = document.getElementById('time-tracking').value;
+            const complexity = parseFloat(document.getElementById('complexity').value);
+
+            // Simple time parsing for demo
+            let hours = 0;
+            if (timeTracking.includes('h')) {
+                if (timeTracking.includes('m')) {
+                    const parts = timeTracking.split(' ');
+                    hours = parseFloat(parts[0]) + (parseFloat(parts[1]) / 60);
+                } else {
+                    hours = parseFloat(timeTracking);
+                }
+            } else if (timeTracking.includes('m')) {
+                hours = parseFloat(timeTracking) / 60;
+            } else {
+                hours = parseFloat(timeTracking);
+            }
+
+            const storyPoints = Math.round((hours * complexity) * 100) / 100;
+            document.getElementById('calculated-points').textContent = storyPoints;
+
+            // Update the story point field if it exists
+            const input = document.querySelector('[data-testid="issue-field-number.ui.issue-field-story-point-estimate--container"] input');
+            if (input) {
+                input.value = storyPoints;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        function clearStoryPoints() {
+            document.getElementById('calculated-points').textContent = '-';
+            const input = document.querySelector('[data-testid="issue-field-number.ui.issue-field-story-point-estimate--container"] input');
+            if (input) {
+                input.value = '';
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        // Simulate JIRA field changes
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                changeTimeTracking();
+            }
+        }, 5000);
+
+        setInterval(() => {
+            if (Math.random() > 0.8) {
+                changeComplexity();
+            }
+        }, 7000);
+
+        // Extension testing functions
+        function testExtensionFunctions() {
+            console.log('Testing extension functions...');
+
+            if (window.jiraStoryPointCalculator) {
+                console.log('✅ Extension loaded successfully');
+                console.log('Extension object:', window.jiraStoryPointCalculator);
+            } else {
+                console.log('❌ Extension not loaded');
+            }
+
+            if (window.triggerStoryPointCalculation) {
+                console.log('✅ triggerStoryPointCalculation function available');
+            } else {
+                console.log('❌ triggerStoryPointCalculation function not available');
+            }
+
+            if (window.toggleStoryPointPanel) {
+                console.log('✅ toggleStoryPointPanel function available');
+            } else {
+                console.log('❌ toggleStoryPointPanel function not available');
+            }
+        }
+
+        function activateExtension() {
+            if (window.activateStoryPointCalculator) {
+                const result = window.activateStoryPointCalculator();
+                document.getElementById('extension-status').textContent = `Extension Status: Activated (Result: ${result})`;
+                console.log('Activate extension result:', result);
+            } else {
+                console.log('❌ activateStoryPointCalculator function not available');
+            }
+        }
+
+        function deactivateExtension() {
+            if (window.deactivateStoryPointCalculator) {
+                const result = window.deactivateStoryPointCalculator();
+                document.getElementById('extension-status').textContent = `Extension Status: Deactivated (Result: ${result})`;
+                console.log('Deactivate extension result:', result);
+            } else {
+                console.log('❌ deactivateStoryPointCalculator function not available');
+            }
+        }
+
+        function triggerCalculation() {
+            if (window.triggerStoryPointCalculation) {
+                const result = window.triggerStoryPointCalculation();
+                console.log('Trigger calculation result:', result);
+            } else {
+                console.log('❌ triggerStoryPointCalculation function not available');
+            }
+        }
+
+        // Panel control functions
+        function showPanel() {
+            if (window.showStoryPointPanel) {
+                const result = window.showStoryPointPanel();
+                console.log('Show panel result:', result);
+            } else {
+                console.log('❌ showStoryPointPanel function not available');
+            }
+        }
+
+        function hidePanel() {
+            if (window.hideStoryPointPanel) {
+                const result = window.hideStoryPointPanel();
+                console.log('Hide panel result:', result);
+            } else {
+                console.log('❌ hideStoryPointPanel function not available');
+            }
+        }
+
+        function togglePanel() {
+            if (window.toggleStoryPointPanel) {
+                const result = window.toggleStoryPointPanel();
+                console.log('Toggle panel result:', result);
+            } else {
+                console.log('❌ toggleStoryPointPanel function not available');
+            }
+        }
+
+        function debugPanel() {
+            if (window.debugStoryPointPanel) {
+                const result = window.debugStoryPointPanel();
+                console.log('Debug panel result:', result);
+            } else {
+                console.log('❌ debugStoryPointPanel function not available');
+            }
+        }
+
+        function forceShowPanel() {
+            if (window.forceShowStoryPointPanel) {
+                const result = window.forceShowStoryPointPanel();
+                console.log('Force show panel result:', result);
+            } else {
+                console.log('❌ forceShowStoryPointPanel function not available');
+            }
+        }
+
+        function quickTest() {
+            const resultsDiv = document.getElementById('quick-test-results');
+            const contentDiv = document.getElementById('test-results-content');
+            resultsDiv.style.display = 'block';
+
+            let results = '<ul>';
+
+            // Test 1: Check if extension is loaded
+            if (window.jiraStoryPointCalculator) {
+                results += '<li>✅ Extension loaded</li>';
+            } else {
+                results += '<li>❌ Extension not loaded</li>';
+            }
+
+            // Test 2: Check if global functions are available
+            if (window.activateStoryPointCalculator) {
+                results += '<li>✅ activateStoryPointCalculator available</li>';
+            } else {
+                results += '<li>❌ activateStoryPointCalculator not available</li>';
+            }
+
+            // Test 3: Check if floating panel exists
+            if (window.jiraStoryPointCalculator && window.jiraStoryPointCalculator.floatingPanel) {
+                results += '<li>✅ Floating panel exists</li>';
+            } else {
+                results += '<li>❌ Floating panel does not exist</li>';
+            }
+
+            // Test 4: Check panel visibility
+            if (window.jiraStoryPointCalculator && window.jiraStoryPointCalculator.floatingPanel) {
+                const panel = window.jiraStoryPointCalculator.floatingPanel;
+                const computedStyle = window.getComputedStyle(panel);
+                results += `<li>Panel display: ${computedStyle.display}</li>`;
+                results += `<li>Panel visibility: ${computedStyle.visibility}</li>`;
+                results += `<li>Panel z-index: ${computedStyle.zIndex}</li>`;
+            }
+
+            results += '</ul>';
+            contentDiv.innerHTML = results;
+        }
+
+        function createCalculatorManually() {
+            console.log('Attempting to create calculator manually...');
+            if (!window.jiraStoryPointCalculator) {
+                console.log('JIRA Story Point Calculator not loaded, attempting to load it.');
+                // This is a placeholder. In a real scenario, you'd inject a script tag
+                // or use a content script to create the calculator.
+                // For this test, we'll just log the attempt.
+                console.log('Please ensure the content script is loaded and the calculator is available.');
+            } else {
+                console.log('JIRA Story Point Calculator already loaded.');
+            }
+        }
+
+        function testContentScript() {
+            console.log('Testing if content script is loaded and working...');
+            if (window.jiraStoryPointCalculator) {
+                console.log('✅ Content script is loaded and available.');
+                console.log('Content script object:', window.jiraStoryPointCalculator);
+            } else {
+                console.log('❌ Content script is NOT loaded or not available.');
+                console.log('Please ensure the content script is loaded and the calculator is available.');
+            }
+        }
+    </script>
+</body>
+
+</html>
