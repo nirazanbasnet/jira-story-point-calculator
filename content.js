@@ -346,28 +346,58 @@ class JIRAStoryPointCalculator {
 
         timeString = timeString.replace(/\s+/g, ' ').trim();
 
-        const patterns = [
-            /^(\d+(?:\.\d+)?)m$/i,
+        // Handle Jira time format: 1d 15m, 2d 3h 45m, etc.
+        // Where 1d = 8 hours (standard Jira workday)
+        const jiraPatterns = [
+            // 1d 15m format
+            /^(\d+)d\s+(\d+(?:\.\d+)?)m$/i,
+            // 1d 3h 15m format
+            /^(\d+)d\s+(\d+(?:\.\d+)?)h\s+(\d+(?:\.\d+)?)m$/i,
+            // 1d 3h format
+            /^(\d+)d\s+(\d+(?:\.\d+)?)h$/i,
+            // 1d format
+            /^(\d+)d$/i,
+            // 3h 15m format
             /^(\d+(?:\.\d+)?)h\s+(\d+(?:\.\d+)?)m$/i,
-            /^(\d+(?:\.\d+)?)h$/i,
-            /^(\d+(?:\.\d+)?)m$/i
+            // 15m format
+            /^(\d+(?:\.\d+)?)m$/i,
+            // 3h format
+            /^(\d+(?:\.\d+)?)h$/i
         ];
 
-        for (let i = 0; i < patterns.length; i++) {
-            const match = timeString.match(patterns[i]);
+        for (let i = 0; i < jiraPatterns.length; i++) {
+            const match = timeString.match(jiraPatterns[i]);
             if (match) {
                 switch (i) {
-                    case 0: return parseFloat(match[1]) / 60;
-                    case 1:
-                        const hours = parseFloat(match[1]);
-                        const minutes = parseFloat(match[2]);
-                        return hours + (minutes / 60);
-                    case 2: return parseFloat(match[1]);
-                    case 3: return parseFloat(match[1]) / 60;
+                    case 0: // 1d 15m
+                        const days1 = parseInt(match[1]);
+                        const minutes1 = parseFloat(match[2]);
+                        return (days1 * 8) + (minutes1 / 60);
+                    case 1: // 1d 3h 15m
+                        const days2 = parseInt(match[1]);
+                        const hours2 = parseFloat(match[2]);
+                        const minutes2 = parseFloat(match[3]);
+                        return (days2 * 8) + hours2 + (minutes2 / 60);
+                    case 2: // 1d 3h
+                        const days3 = parseInt(match[1]);
+                        const hours3 = parseFloat(match[2]);
+                        return (days3 * 8) + hours3;
+                    case 3: // 1d
+                        const days4 = parseInt(match[1]);
+                        return days4 * 8;
+                    case 4: // 3h 15m
+                        const hours4 = parseFloat(match[1]);
+                        const minutes4 = parseFloat(match[2]);
+                        return hours4 + (minutes4 / 60);
+                    case 5: // 15m
+                        return parseFloat(match[1]) / 60;
+                    case 6: // 3h
+                        return parseFloat(match[1]);
                 }
             }
         }
 
+        // Handle decimal values (fallback)
         const decimalMatch = timeString.match(/^(\d+(?:\.\d+)?)$/);
         if (decimalMatch) {
             return parseFloat(decimalMatch[1]);
