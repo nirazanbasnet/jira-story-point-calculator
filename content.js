@@ -656,7 +656,7 @@ class JIRAStoryPointCalculator {
         this.floatingPanel.innerHTML = `
             <div class="panel-content">
                 <div class="status-indicator">
-                    <span class="status-icon">🚀</span>
+                    <div class="pulse-dot"></div>
                     <span class="status-text">Active</span>
                 </div>
             </div>
@@ -740,8 +740,8 @@ class JIRAStoryPointCalculator {
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                background: transparent;
-                border: 1px solid #4CAF50;
+                background: #fff;
+                border: 1px solid #fff;
                 border-radius: 4px;
                 padding: 8px;
             }
@@ -753,13 +753,16 @@ class JIRAStoryPointCalculator {
                 flex: 1;
             }
 
-            .jira-story-point-panel .status-icon {
-                font-size: 14px;
-                animation: float 3s ease-in-out infinite;
+            .jira-story-point-panel .pulse-dot {
+                width: 8px;
+                height: 8px;
+                background: #4CAF50;
+                border-radius: 50%;
+                animation: pulse 2s ease-in-out infinite;
             }
 
             .jira-story-point-panel .status-text {
-                color: #fff;
+                color: #333;
                 font-weight: 500;
                 letter-spacing: 0.025em;
             }
@@ -795,9 +798,22 @@ class JIRAStoryPointCalculator {
                 transform: scale(0.95);
             }
 
-            @keyframes float {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-3px); }
+            @keyframes pulse {
+                0% { 
+                    transform: scale(1);
+                    opacity: 1;
+                    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+                }
+                50% { 
+                    transform: scale(1.2);
+                    opacity: 0.8;
+                    box-shadow: 0 0 0 8px rgba(76, 175, 80, 0);
+                }
+                100% { 
+                    transform: scale(1);
+                    opacity: 1;
+                    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+                }
             }
 
             .jira-story-point-panel:hover {
