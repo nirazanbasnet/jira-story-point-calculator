@@ -221,12 +221,19 @@ class JIRAStoryPointCalculator {
         try {
             const timeTracking = this.extractTimeTracking();
             const complexity = this.extractComplexity();
+            const priority = this.extractPriority();
 
             if (timeTracking === null || complexity === null) return;
 
-            const storyPoints = this.calculateTW(timeTracking, complexity);
+            let storyPoints = this.calculateTW(timeTracking, complexity);
+
+            // Add 0.5 bonus for Urgent priority
+            if (priority === 'Urgent') {
+                storyPoints += 0.5;
+            }
+
             this.updateStoryPointField(storyPoints);
-            this.updateFloatingPanel(timeTracking, complexity, storyPoints);
+            this.updateFloatingPanel(timeTracking, complexity, storyPoints, priority);
         } catch (error) {
             // Silent error handling
         }
@@ -242,10 +249,14 @@ class JIRAStoryPointCalculator {
 
             const currentTime = this.extractTimeTracking();
             const currentComplexity = this.extractComplexity();
+            const currentPriority = this.extractPriority();
 
-            if (this.lastTimeTracking !== currentTime || this.lastComplexity !== currentComplexity) {
+            if (this.lastTimeTracking !== currentTime ||
+                this.lastComplexity !== currentComplexity ||
+                this.lastPriority !== currentPriority) {
                 this.lastTimeTracking = currentTime;
                 this.lastComplexity = currentComplexity;
+                this.lastPriority = currentPriority;
                 this.calculateStoryPoints();
             }
         }, 2000);
@@ -526,7 +537,7 @@ class JIRAStoryPointCalculator {
         } else {
             const displayElement = element.querySelector('.field-value, .value, [data-testid*="value"]');
             if (displayElement) {
-                value = displayElement.textContent || displayElement.innerText;
+                value = element.textContent || element.innerText;
             } else {
                 value = element.textContent || element.innerText;
             }
@@ -537,6 +548,106 @@ class JIRAStoryPointCalculator {
             if (!isNaN(numValue) && this.complexityValues.includes(numValue)) {
                 return numValue;
             }
+        }
+
+        return null;
+    }
+
+    extractPriority() {
+        const selectors = [
+            '[data-testid="issue-field-priority-readview-full.ui.priority.wrapper"]',
+            '[data-testid*="priority"]',
+            '.priority-field',
+            '#priority',
+            '[data-field-id*="priority"]',
+            'input[name*="priority"]',
+            'select[name*="priority"]'
+        ];
+
+        for (const selector of selectors) {
+            try {
+                const element = document.querySelector(selector);
+                if (element) {
+                    const priorityValue = this.extractPriorityValue(element);
+                    if (priorityValue !== null) {
+                        return priorityValue;
+                    }
+                }
+            } catch (error) {
+                // Silent error handling
+            }
+        }
+
+        return this.extractJIRAPriority();
+    }
+
+    extractJIRAPriority() {
+        // Look for priority in the priority field wrapper
+        const priorityWrapper = document.querySelector('[data-testid="issue-field-priority-readview-full.ui.priority.wrapper"]');
+        if (priorityWrapper) {
+            const priorityText = priorityWrapper.textContent.trim();
+            if (priorityText) {
+                return priorityText;
+            }
+        }
+
+        // Look for priority in any element containing priority text
+        const allElements = document.querySelectorAll('*');
+        for (const element of allElements) {
+            if (element.textContent && element.textContent.toLowerCase().includes('priority')) {
+                const nearbyValue = this.findPriorityNearElement(element);
+                if (nearbyValue !== null) {
+                    return nearbyValue;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    findPriorityNearElement(element) {
+        const parent = element.parentElement;
+        if (parent) {
+            // Look for priority text in parent or siblings
+            const priorityElements = parent.querySelectorAll('span, div, button');
+            for (const priorityElement of priorityElements) {
+                const text = priorityElement.textContent.trim();
+                if (text && !text.toLowerCase().includes('priority') && text.length < 20) {
+                    return text;
+                }
+            }
+
+            const siblings = Array.from(parent.children);
+            for (const sibling of siblings) {
+                if (sibling !== element) {
+                    const text = sibling.textContent.trim();
+                    if (text && !text.toLowerCase().includes('priority') && text.length < 20) {
+                        return text;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    extractPriorityValue(element) {
+        let value = null;
+
+        if (element.tagName === 'INPUT') {
+            value = element.value;
+        } else if (element.tagName === 'SELECT') {
+            value = element.value || element.options[element.selectedIndex]?.text;
+        } else {
+            const displayElement = element.querySelector('.field-value, .value, [data-testid*="value"], span');
+            if (displayElement) {
+                value = displayElement.textContent || displayElement.innerText;
+            } else {
+                value = element.textContent || element.innerText;
+            }
+        }
+
+        if (value) {
+            return value.trim();
         }
 
         return null;
@@ -689,6 +800,24 @@ class JIRAStoryPointCalculator {
                     <div class="pulse-dot"></div>
                     <span class="status-text">Active</span>
                 </div>
+                <div class="info-display">
+                    <div class="info-item">
+                        <span class="info-label">Time:</span>
+                        <span id="current-time-display" class="info-value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Complexity:</span>
+                        <span id="current-complexity-display" class="info-value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Priority:</span>
+                        <span id="current-priority-display" class="info-value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Story Points:</span>
+                        <span id="current-story-points-display" class="info-value">-</span>
+                    </div>
+                </div>
             </div>
         `;
 
@@ -716,15 +845,17 @@ class JIRAStoryPointCalculator {
         }
     }
 
-    updateFloatingPanel(timeTracking, complexity, storyPoints) {
+    updateFloatingPanel(timeTracking, complexity, storyPoints, priority) {
         if (this.floatingPanel) {
             const timeDisplay = this.floatingPanel.querySelector('#current-time-display');
             const complexityDisplay = this.floatingPanel.querySelector('#current-complexity-display');
             const storyPointsDisplay = this.floatingPanel.querySelector('#current-story-points-display');
+            const priorityDisplay = this.floatingPanel.querySelector('#current-priority-display');
 
             if (timeDisplay) timeDisplay.textContent = timeTracking !== null ? `${timeTracking}h` : 'Not found';
             if (complexityDisplay) complexityDisplay.textContent = complexity !== null ? complexity : 'Not found';
             if (storyPointsDisplay) storyPointsDisplay.textContent = storyPoints !== null ? storyPoints : 'Not calculated';
+            if (priorityDisplay) priorityDisplay.textContent = priority !== null ? priority : 'Not found';
         }
     }
 
@@ -756,6 +887,7 @@ class JIRAStoryPointCalculator {
         style.textContent = `
             .jira-story-point-panel {
                 position: fixed;
+                display: none
                 top: 69px;
                 right: 166px;
                 z-index: 10000;
@@ -763,7 +895,8 @@ class JIRAStoryPointCalculator {
                 font-size: 12px;
                 pointer-events: auto;
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                height: 32px;
+                height: auto;
+                min-height: 32px;
             }
 
             .jira-story-point-panel .panel-content {
@@ -774,6 +907,7 @@ class JIRAStoryPointCalculator {
                 border: 1px solid #fff;
                 border-radius: 4px;
                 padding: 8px;
+                min-width: 200px;
             }
 
             .jira-story-point-panel .status-indicator {
@@ -795,6 +929,34 @@ class JIRAStoryPointCalculator {
                 color: #333;
                 font-weight: 500;
                 letter-spacing: 0.025em;
+            }
+
+            .jira-story-point-panel .info-display {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                flex: 1;
+            }
+
+            .jira-story-point-panel .info-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+                font-size: 11px;
+            }
+
+            .jira-story-point-panel .info-label {
+                color: #6B7280;
+                font-weight: 500;
+                min-width: 60px;
+            }
+
+            .jira-story-point-panel .info-value {
+                color: #111827;
+                font-weight: 600;
+                text-align: right;
+                min-width: 40px;
             }
 
             .jira-story-point-panel .panel-actions {
