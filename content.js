@@ -7,7 +7,7 @@ class JIRAStoryPointCalculator {
         this.isActive = false;
         this.debounceTimer = null;
         this.monitoringInterval = null;
-        this.floatingPanel = null;
+
         this.init();
     }
 
@@ -74,7 +74,6 @@ class JIRAStoryPointCalculator {
         this.isActive = true;
         sessionStorage.setItem('jiraStoryPointCalculatorActive', 'true');
 
-        this.createFloatingPanel();
         this.setupFieldObserver();
         this.startContinuousMonitoring();
         this.showNotification('Story Point Calculator Activated', 'success');
@@ -87,7 +86,6 @@ class JIRAStoryPointCalculator {
         sessionStorage.setItem('jiraStoryPointCalculatorActive', 'false');
 
         this.stopContinuousMonitoring();
-        this.removeFloatingPanel();
         this.showNotification('❌ Story Point Calculator DEACTIVATED', 'info');
     }
 
@@ -233,7 +231,6 @@ class JIRAStoryPointCalculator {
             }
 
             this.updateStoryPointField(storyPoints);
-            this.updateFloatingPanel(timeTracking, complexity, storyPoints, priority);
         } catch (error) {
             // Silent error handling
         }
@@ -788,237 +785,7 @@ class JIRAStoryPointCalculator {
         }
     }
 
-    createFloatingPanel() {
-        this.removeFloatingPanel();
 
-        this.floatingPanel = document.createElement('div');
-        this.floatingPanel.id = 'jira-story-point-panel';
-        this.floatingPanel.className = 'jira-story-point-panel';
-        this.floatingPanel.innerHTML = `
-            <div class="panel-content">
-                <div class="status-indicator">
-                    <div class="pulse-dot"></div>
-                    <span class="status-text">Active</span>
-                </div>
-                <div class="info-display">
-                    <div class="info-item">
-                        <span class="info-label">Time:</span>
-                        <span id="current-time-display" class="info-value">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Complexity:</span>
-                        <span id="current-complexity-display" class="info-value">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Priority:</span>
-                        <span id="current-priority-display" class="info-value">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Story Points:</span>
-                        <span id="current-story-points-display" class="info-value">-</span>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        this.addPanelStyles();
-
-        document.body.appendChild(this.floatingPanel);
-
-        this.floatingPanel.style.opacity = '0';
-        this.floatingPanel.style.transform = 'translateY(-20px) scale(0.95)';
-        this.floatingPanel.style.display = 'flex';
-        this.floatingPanel.style.visibility = 'visible';
-        this.floatingPanel.style.zIndex = '10000';
-
-        setTimeout(() => {
-            this.floatingPanel.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            this.floatingPanel.style.opacity = '1';
-            this.floatingPanel.style.transform = 'translateY(0) scale(1)';
-        }, 50);
-    }
-
-    removeFloatingPanel() {
-        if (this.floatingPanel && this.floatingPanel.parentNode) {
-            this.floatingPanel.parentNode.removeChild(this.floatingPanel);
-            this.floatingPanel = null;
-        }
-    }
-
-    updateFloatingPanel(timeTracking, complexity, storyPoints, priority) {
-        if (this.floatingPanel) {
-            const timeDisplay = this.floatingPanel.querySelector('#current-time-display');
-            const complexityDisplay = this.floatingPanel.querySelector('#current-complexity-display');
-            const storyPointsDisplay = this.floatingPanel.querySelector('#current-story-points-display');
-            const priorityDisplay = this.floatingPanel.querySelector('#current-priority-display');
-
-            if (timeDisplay) timeDisplay.textContent = timeTracking !== null ? `${timeTracking}h` : 'Not found';
-            if (complexityDisplay) complexityDisplay.textContent = complexity !== null ? complexity : 'Not found';
-            if (storyPointsDisplay) storyPointsDisplay.textContent = storyPoints !== null ? storyPoints : 'Not calculated';
-            if (priorityDisplay) priorityDisplay.textContent = priority !== null ? priority : 'Not found';
-        }
-    }
-
-    showFloatingPanel() {
-        if (this.floatingPanel) {
-            this.floatingPanel.style.display = 'flex';
-            this.floatingPanel.style.opacity = '1';
-            this.floatingPanel.style.transform = 'translateY(0) scale(1)';
-        }
-    }
-
-    hideFloatingPanel() {
-        if (this.floatingPanel) {
-            this.floatingPanel.style.opacity = '0';
-            this.floatingPanel.style.transform = 'translateY(-20px) scale(0.95)';
-
-            setTimeout(() => {
-                this.floatingPanel.style.display = 'none';
-            }, 300);
-        }
-    }
-
-    addPanelStyles() {
-        const styleId = 'jira-story-point-panel-styles';
-        if (document.getElementById(styleId)) return;
-
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.textContent = `
-            .jira-story-point-panel {
-                position: fixed;
-                display: none
-                top: 69px;
-                right: 166px;
-                z-index: 10000;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                font-size: 12px;
-                pointer-events: auto;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                height: auto;
-                min-height: 32px;
-            }
-
-            .jira-story-point-panel .panel-content {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                background: #fff;
-                border: 1px solid #fff;
-                border-radius: 4px;
-                padding: 8px;
-                min-width: 200px;
-            }
-
-            .jira-story-point-panel .status-indicator {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                flex: 1;
-            }
-
-            .jira-story-point-panel .pulse-dot {
-                width: 8px;
-                height: 8px;
-                background: #4CAF50;
-                border-radius: 50%;
-                animation: pulse 2s ease-in-out infinite;
-            }
-
-            .jira-story-point-panel .status-text {
-                color: #333;
-                font-weight: 500;
-                letter-spacing: 0.025em;
-            }
-
-            .jira-story-point-panel .info-display {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                flex: 1;
-            }
-
-            .jira-story-point-panel .info-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 8px;
-                font-size: 11px;
-            }
-
-            .jira-story-point-panel .info-label {
-                color: #6B7280;
-                font-weight: 500;
-                min-width: 60px;
-            }
-
-            .jira-story-point-panel .info-value {
-                color: #111827;
-                font-weight: 600;
-                text-align: right;
-                min-width: 40px;
-            }
-
-            .jira-story-point-panel .panel-actions {
-                display: flex;
-                gap: 4px;
-            }
-
-            .jira-story-point-panel .close-btn {
-                background: none;
-                border: none;
-                border-radius: 6px;
-                padding: 4px;
-                cursor: pointer;
-                font-size: 12px;
-                color: #6B7280;
-                transition: all 0.2s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 24px;
-                height: 24px;
-            }
-
-            .jira-story-point-panel .close-btn:hover {
-                background: rgba(239, 68, 68, 0.1);
-                color: #EF4444;
-                transform: scale(1.1);
-            }
-
-            .jira-story-point-panel .close-btn:active {
-                transform: scale(0.95);
-            }
-
-            @keyframes pulse {
-                0% { 
-                    transform: scale(1);
-                    opacity: 1;
-                    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
-                }
-                50% { 
-                    transform: scale(1.2);
-                    opacity: 0.8;
-                    box-shadow: 0 0 0 8px rgba(76, 175, 80, 0);
-                }
-                100% { 
-                    transform: scale(1);
-                    opacity: 1;
-                    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-                }
-            }
-
-            .jira-story-point-panel:hover {
-                transform: translateY(-2px);
-                box-shadow: 
-                    0 8px 25px rgba(0, 0, 0, 0.12),
-                    0 4px 12px rgba(0, 0, 0, 0.06),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            }
-        `;
-
-        document.head.appendChild(style);
-    }
 
     isJIRAIssuePage() {
         const url = window.location.href;
@@ -1038,7 +805,6 @@ class JIRAStoryPointCalculator {
 
         this.setupFieldObserver();
         this.startContinuousMonitoring();
-        this.createFloatingPanel();
         this.showNotification('✅ Story Point Calculator Auto-Activated', 'success');
         this.calculateStoryPoints();
     }
@@ -1092,4 +858,19 @@ document.addEventListener('keydown', (e) => {
             window.deactivateStoryPointCalculator();
         }
     }
+
+    if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        if (window.triggerStoryPointCalculation) {
+            window.triggerStoryPointCalculation();
+        }
+    }
 });
+
+// Add status function for popup
+window.getStoryPointCalculatorStatus = () => {
+    if (window.jiraStoryPointCalculator) {
+        return { active: window.jiraStoryPointCalculator.isActive };
+    }
+    return { active: false };
+};
