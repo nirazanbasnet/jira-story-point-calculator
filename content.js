@@ -785,18 +785,9 @@ class JIRAStoryPointCalculator {
         }
     }
 
-
-
     isJIRAIssuePage() {
         const url = window.location.href;
-        const isJIRA = url.includes('atlassian.net') || url.includes('jira.com');
-        const isIssuePage = url.includes('/browse/') || url.includes('/issues/') || url.includes('/secure/');
-
-        const hasIssueElements = document.querySelector('[data-testid*="issue"]') ||
-            document.querySelector('[data-testid*="Issue"]') ||
-            document.querySelector('.issue-view') ||
-            document.querySelector('#issue-content');
-        return isJIRA && (isIssuePage || hasIssueElements);
+        return url.includes('https://jobinsv2.atlassian.net/browse/JBV1-');
     }
 
     autoActivate() {
