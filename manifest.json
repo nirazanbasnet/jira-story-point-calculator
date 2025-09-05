@@ -12,7 +12,7 @@
     "*://*.jira.com/*"
   ],
   "action": {
-    "default_title": "Story Point Calculator",
+    "default_title": "Jira Story Point Calculator",
     "default_popup": "popup.html"
   },
   "content_scripts": [

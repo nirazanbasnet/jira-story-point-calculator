@@ -787,7 +787,10 @@ class JIRAStoryPointCalculator {
 
     isJIRAIssuePage() {
         const url = window.location.href;
-        return url.includes('https://jobinsv2.atlassian.net/browse/JBV1-');
+        // Check for Jira issue pages - more flexible pattern
+        return url.includes('jobinsv2.atlassian.net/browse/') ||
+            url.includes('atlassian.net/browse/') ||
+            url.includes('jira.com/browse/');
     }
 
     autoActivate() {

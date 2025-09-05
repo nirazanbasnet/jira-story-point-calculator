@@ -1,0 +1,26 @@
+{
+  "name": "jira-story-point-calculator",
+  "version": "1.0.0",
+  "description": "Chrome extension to automatically calculate JIRA story points from time tracking and complexity",
+  "scripts": {
+    "build": "./build-optimize.sh",
+    "build:clean": "rm -rf build-optimized && ./build-optimize.sh",
+    "build:dev": "mkdir -p build-dev && cp manifest.json content.js popup.js popup.html README.md build-dev/ && cp -r icons build-dev/",
+    "verify": "./verify-build.sh",
+    "size": "du -sh build-optimized/ 2>/dev/null || echo 'No build found. Run npm run build first.'"
+  },
+  "keywords": [
+    "jira",
+    "story-points",
+    "chrome-extension",
+    "time-tracking",
+    "agile"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/jira-story-point-calculator.git"
+  }
+}

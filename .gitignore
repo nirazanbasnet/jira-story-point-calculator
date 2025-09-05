@@ -1,2 +1,19 @@
 .history/
 .DS_Store
+
+# Build directories
+build/
+build-optimized/
+build-dev/
+
+# Node modules (if using npm)
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
