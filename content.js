@@ -41,18 +41,26 @@ class JIRAStoryPointCalculator {
         }
 
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-            if (request.action === 'activate') {
-                this.activate();
-                sendResponse({ success: true, message: 'Extension activated' });
-            } else if (request.action === 'deactivate') {
-                this.deactivate();
-                sendResponse({ success: true, message: 'Extension deactivated' });
-            } else if (request.action === 'getStatus') {
-                sendResponse({ active: this.isActive });
-            } else if (request.action === 'calculate') {
-                this.calculateStoryPoints();
-                sendResponse({ success: true, message: 'Calculation triggered' });
+            try {
+                if (request.action === 'activate') {
+                    this.activate();
+                    sendResponse({ success: true, message: 'Extension activated' });
+                } else if (request.action === 'deactivate') {
+                    this.deactivate();
+                    sendResponse({ success: true, message: 'Extension deactivated' });
+                } else if (request.action === 'getStatus') {
+                    sendResponse({ active: this.isActive });
+                } else if (request.action === 'calculate') {
+                    this.calculateStoryPoints();
+                    sendResponse({ success: true, message: 'Calculation triggered' });
+                } else {
+                    sendResponse({ success: false, message: 'Unknown action' });
+                }
+            } catch (error) {
+                console.error('JIRA Story Point Calculator: Error handling message:', error);
+                sendResponse({ success: false, message: 'Error processing request' });
             }
+            return true; // Keep message channel open for async response
         });
 
         this.isInitialized = true;
@@ -858,10 +866,31 @@ class JIRAStoryPointCalculator {
 
     isJIRAIssuePage() {
         const url = window.location.href;
-        // Check for Jira issue pages - more flexible pattern
-        return url.includes('jobinsv2.atlassian.net/browse/') ||
-            url.includes('atlassian.net/browse/') ||
-            url.includes('jira.com/browse/');
+
+        // Check for various JIRA URL patterns
+        const jiraPatterns = [
+            'jobinsv2.atlassian.net',
+            'atlassian.net',
+            'jira.com'
+        ];
+
+        // Check if URL contains any JIRA domain
+        const hasJiraDomain = jiraPatterns.some(pattern => url.includes(pattern));
+
+        if (!hasJiraDomain) return false;
+
+        // Check for JIRA-specific paths or parameters
+        const jiraPaths = [
+            '/browse/',           // Issue detail pages
+            '/issues/',           // Issues list pages
+            '/jira/',            // JIRA app pages
+            '/secure/',          // Secure JIRA pages
+            'selectedIssue=',    // Issues with selected issue parameter
+            'filter=',           // Filtered issue lists
+            'jql='               // JQL query pages
+        ];
+
+        return jiraPaths.some(path => url.includes(path));
     }
 
     autoActivate() {
@@ -877,8 +906,14 @@ class JIRAStoryPointCalculator {
 
 // Initialize the calculator
 try {
-    const calculator = new JIRAStoryPointCalculator();
-    window.jiraStoryPointCalculator = calculator;
+    // Prevent multiple initializations
+    if (!window.jiraStoryPointCalculator) {
+        const calculator = new JIRAStoryPointCalculator();
+        window.jiraStoryPointCalculator = calculator;
+        console.log('JIRA Story Point Calculator: ✅ Initialized successfully');
+    } else {
+        console.log('JIRA Story Point Calculator: ⚠️ Already initialized, reusing existing instance');
+    }
 } catch (error) {
     console.error('JIRA Story Point Calculator: ❌ Error during initialization:', error);
 }

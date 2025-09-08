@@ -221,6 +221,24 @@
             box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
         }
 
+        .toggle-btn:disabled {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+            color: #d1d5db;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .toggle-btn:disabled:hover {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .toggle-btn:disabled::before {
+            display: none;
+        }
+
         .feature-list {
             list-style: none;
         }
