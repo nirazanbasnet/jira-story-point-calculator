@@ -76,7 +76,7 @@ class JIRAStoryPointCalculator {
 
         this.setupFieldObserver();
         this.startContinuousMonitoring();
-        this.showNotification('Story Point Calculator Activated', 'success');
+        this.showNotification('Story Point Calculator is now active and monitoring Jira fields', 'success');
     }
 
     deactivate() {
@@ -86,7 +86,7 @@ class JIRAStoryPointCalculator {
         sessionStorage.setItem('jiraStoryPointCalculatorActive', 'false');
 
         this.stopContinuousMonitoring();
-        this.showNotification('❌ Story Point Calculator DEACTIVATED', 'info');
+        this.showNotification('Story Point Calculator has been deactivated', 'info');
     }
 
     showNotification(message, type = 'info') {
@@ -95,9 +95,17 @@ class JIRAStoryPointCalculator {
 
         const notification = document.createElement('div');
         notification.id = 'jira-calculator-notification';
+
+        const icon = type === 'success' ? '✅' : 'ℹ️';
+        const bgColor = type === 'success' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+
         notification.innerHTML = `
             <div class="notification-content">
-                <span>${message}</span>
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-text">
+                    <div class="notification-title">${type === 'success' ? 'Calculator Activated' : 'Calculator Status'}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
                 <button class="notification-close">×</button>
             </div>
         `;
@@ -106,53 +114,116 @@ class JIRAStoryPointCalculator {
         style.textContent = `
             #jira-calculator-notification {
                 position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#d4edda' : '#d1ecf1'};
-                color: ${type === 'success' ? '#155724' : '#0c5460'};
-                border: 1px solid ${type === 'success' ? '#c3e6cb' : '#bee5eb'};
-                border-radius: 4px;
-                padding: 12px 20px;
+                top: 24px;
+                right: 24px;
+                background: white;
+                border-radius: 12px;
+                padding: 0;
                 z-index: 10000;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                font-size: 14px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                animation: slideIn 0.3s ease-out;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+                border: 1px solid #e2e8f0;
+                animation: slideInScale 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                max-width: 400px;
+                overflow: hidden;
+            }
+            #jira-calculator-notification::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: ${bgColor};
             }
             #jira-calculator-notification .notification-content {
                 display: flex;
-                align-items: center;
-                gap: 10px;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            #jira-calculator-notification .notification-icon {
+                font-size: 20px;
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+            #jira-calculator-notification .notification-text {
+                flex: 1;
+            }
+            #jira-calculator-notification .notification-title {
+                font-weight: 600;
+                font-size: 14px;
+                color: #1e293b;
+                margin-bottom: 2px;
+                letter-spacing: -0.01em;
+            }
+            #jira-calculator-notification .notification-message {
+                font-size: 13px;
+                color: #64748b;
+                line-height: 1.4;
             }
             #jira-calculator-notification .notification-close {
                 background: none;
                 border: none;
-                color: inherit;
+                color: #94a3b8;
                 font-size: 18px;
                 cursor: pointer;
-                padding: 0;
-                width: 20px;
-                height: 20px;
+                padding: 4px;
+                width: 24px;
+                height: 24px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+                flex-shrink: 0;
             }
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
+            #jira-calculator-notification .notification-close:hover {
+                background: #f1f5f9;
+                color: #64748b;
+            }
+            @keyframes slideInScale {
+                from { 
+                    transform: translateX(100%) scale(0.9); 
+                    opacity: 0; 
+                }
+                to { 
+                    transform: translateX(0) scale(1); 
+                    opacity: 1; 
+                }
+            }
+            @keyframes slideOut {
+                from { 
+                    transform: translateX(0) scale(1); 
+                    opacity: 1; 
+                }
+                to { 
+                    transform: translateX(100%) scale(0.9); 
+                    opacity: 0; 
+                }
             }
         `;
         document.head.appendChild(style);
 
         notification.querySelector('.notification-close').addEventListener('click', () => {
-            notification.remove();
+            notification.style.animation = 'slideOut 0.3s ease-in forwards';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
         });
 
         setTimeout(() => {
             if (notification.parentNode) {
-                notification.remove();
+                notification.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
             }
-        }, 3000);
+        }, 4000);
 
         document.body.appendChild(notification);
     }
@@ -799,7 +870,7 @@ class JIRAStoryPointCalculator {
 
         this.setupFieldObserver();
         this.startContinuousMonitoring();
-        this.showNotification('✅ Story Point Calculator Auto-Activated', 'success');
+        this.showNotification('Story Point Calculator auto-activated on Jira page', 'success');
         this.calculateStoryPoints();
     }
 }
